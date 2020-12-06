@@ -7,7 +7,7 @@
     "start": "nodejs dist/index.js",
     "build": "tsc",
     "dev": "ts-node src/index.ts",
-    "postinstall": "nodejs dist/setup.ts"
+    "postinstall": "nodejs dist/setup.js"
   },
   "dependencies": {
     "@discordjs/opus": "^0.3.3",
