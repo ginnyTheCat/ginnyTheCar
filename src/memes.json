@@ -77,6 +77,13 @@
         "to": 113.3,
         "tags": ["no", "god", "please", "office"]
     },
+    "oof": {
+        "url": "https://www.youtube.com/watch?v=HoBa2SyvtpE",
+        "from": 0.5,
+        "to": 1,
+        "tags": ["oof", "roblox", "death"],
+        "audioOnly": true
+    },
     "scheiß-ösiland": {
         "url": "https://www.youtube.com/watch?v=sFoeIRVwP6A",
         "from": 13,
@@ -84,9 +91,9 @@
         "tags": ["scheiß", "ösiland", "österreich", "spregt", "weg"]
     },
     "so-ein-geiles-produkt": {
-        "url": "https://www.youtube.com/watch?v=tjxX7n3saz8",
-        "from": 80.2,
-        "to": 83.9,
+        "url": "https://www.youtube.com/watch?v=SSroMx0Wh4E",
+        "from": 365.9,
+        "to": 370.4,
         "tags": ["so", "geiles", "produkt", "inscope", "inscop21"]
     },
     "sweet-home-alabama": {
@@ -124,5 +131,11 @@
         "url": "https://www.youtube.com/watch?v=OleLlIpymtU",
         "tags": ["wasted", "death", "gta"],
         "audioOnly": true
+    },
+    "wilhelm-scream": {
+        "url": "https://www.youtube.com/watch?v=q3-Y8eTaMZc",
+        "from": 7,
+        "to": 7.8,
+        "tags": ["wilhelm", "scream"]
     }
 }

@@ -1,6 +1,6 @@
 import { Discord, Message, Platform } from "@leluxnet/xbot";
-import { existsSync, fstat } from "fs";
-import { find as findEmoji, random as randomEmoji } from "node-emoji";
+import { existsSync } from "fs";
+import { find as findEmoji, hasEmoji, random as randomEmoji } from "node-emoji";
 import axios from "axios";
 
 import { Memes } from "./memes";
@@ -121,38 +121,78 @@ async function onMessage(msg: Message) {
   const [cmd, ...args] = rCmd.split(" ");
 
   switch (cmd) {
-    case "emoji-text":
+    case "emojify":
       msg.channel.sendMessage(args.map(toEmoji).join(" "));
       break;
-    case "random-emojis":
+    case "random-emojis": {
       if (args.length !== 1) return;
       const amount = parseInt(args[0]);
       if (isNaN(amount)) return;
 
       msg.channel.sendMessage(randomEmojis(amount));
       break;
-    case "post":
-      const vName = findMeme(args);
-      if (vName === undefined) return;
-      const vFile = `./memes/${vName}.mp4`;
+    }
+    case "question": {
+      const m = await msg.channel.sendMessage(args.join(" "));
+
+      m.react("👍");
+      m.react("👎");
+      m.react("🤷");
+
+      break;
+    }
+    case "poll": {
+      console.log(args);
+
+      const emojis: string[] = [];
+      args
+        .slice()
+        .reverse()
+        .find((e) => {
+          // TODO: Discord emote support
+          if (hasEmoji(e)) {
+            emojis.push(e);
+            return false;
+          }
+          return true;
+        });
+
+      const text = args.slice(0, args.length - emojis.length).join(" ");
+
+      const m = await msg.channel.sendMessage(text);
+      emojis.reverse().forEach((e) => m.react(e));
+
+      break;
+    }
+    case "post": {
+      const name = findMeme(args);
+      if (name === undefined) return;
+      const vFile = `./memes/${name}.mp4`;
 
       if (existsSync(vFile)) {
         msg.channel._internal.send("", { files: [vFile] });
       } else {
-        msg.channel._internal.send("", { files: [`./memes/${vName}.mp3`] });
+        msg.channel._internal.send("", { files: [`./memes/${name}.mp3`] });
       }
       break;
-    case "play":
-      const aName = findMeme(args);
-      if (aName === undefined) return;
-      const aFile = `./memes/${aName}.mp3`;
+    }
+    case "play": {
+      const name = findMeme(args);
+      if (name === undefined) return;
+      const file = `./memes/${name}.mp3`;
 
       if (msg.platform instanceof Discord) {
         const voice = msg._internal.member.voice.channel;
-        voice.join().then((conn: any) => conn.play(aFile)); // .on("finish", () => voice.leave()))
+        if (voice === undefined) {
+          msg.channel.sendMessage("You are not in a voice channel");
+        } else {
+          voice.join().then((conn: any) => conn.play(file)); // .on("finish", () => voice.leave()))
+        }
+      } else {
+        msg.channel.sendMessage("This command only works on Discord");
       }
-
       break;
+    }
   }
 }
 
