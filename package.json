@@ -6,12 +6,14 @@
   "scripts": {
     "start": "nodejs dist/index.js",
     "build": "tsc",
+    "postinstall": "nodejs dist/setup.js",
     "dev": "ts-node src/index.ts",
-    "postinstall": "nodejs dist/setup.js"
+    "setup-dev": "ts-node src/setup.ts"
   },
   "dependencies": {
     "@discordjs/opus": "^0.3.3",
     "@leluxnet/xbot": "0.0.1",
+    "axios": "^0.21.0",
     "node-emoji": "^1.10.0"
   },
   "devDependencies": {
