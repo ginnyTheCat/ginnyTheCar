@@ -2,7 +2,7 @@ import { exec as execCallback } from "child_process";
 import { unlink } from "fs";
 
 import { Meme, Memes } from "./memes";
-import _memes from "./tmp.json";
+import _memes from "./memes.json";
 const memes: Memes = <Memes>_memes;
 
 function exec(cmd: string) {
@@ -31,10 +31,14 @@ function getFfmpeg(input: string, name: string, meme: Meme) {
   }
   const cut = parts.join(" ");
 
+  const earrape = "-af acrusher=.1:1:64:0:log";
+
   // cut has to be at the outputs NOT the input. This is a bug (https://trac.ffmpeg.org/ticket/8189)
   return (
-    `ffmpeg -y -i ${input} ${cut} "memes/${name}.mp3"` +
-    (meme.audioOnly ? "" : ` ${cut} "memes/${name}.mp4"`)
+    `ffmpeg -y -i ${input} ${cut} "memes/${name}.mp3" ${cut} ${earrape} "memes/${name}_earrape.mp3"` +
+    (meme.audioOnly
+      ? ""
+      : ` ${cut} "memes/${name}.mp4" ${cut} ${earrape} "memes/${name}_earrape.mp4"`)
   );
 }
 

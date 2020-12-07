@@ -1,5 +1,5 @@
 import { Discord, Message, Platform } from "@leluxnet/xbot";
-import { existsSync } from "fs";
+import { existsSync, fstat } from "fs";
 import { find as findEmoji, random as randomEmoji } from "node-emoji";
 import axios from "axios";
 
@@ -32,6 +32,7 @@ for (const [name, m] of Object.entries(memes)) {
 
 async function redirectUrl(url: string) {
   const res = await axios.get(url);
+  console.log(res.request.res.responseUrl);
   return res.request.res.responseUrl;
 }
 
@@ -41,7 +42,8 @@ async function isRickRoll(url: string) {
   const resUrl = await redirectUrl(url);
   return !!RICKROLL_IDS.find(
     (e) =>
-      resUrl.startsWith(`https://www.youtube.com/watch?v=${e}`) ||
+      (resUrl.startsWith("https://www.youtube.com/watch") &&
+        resUrl.includes(`v=${e}`)) ||
       resUrl.startsWith(`https://www.youtube.com/embed/${e}`) ||
       resUrl.startsWith(`https://www.youtube-nocookie.com/embed/${e}`)
   );
@@ -88,11 +90,18 @@ function findMeme(input: string[]) {
     }
   }
 
-  return maxKey;
+  return input.includes("earrape") ? `${maxKey}_earrape` : maxKey;
 }
 
 async function onMessage(msg: Message) {
-  if (await isRickRoll(msg.content)) {
+  const rickRoll = await Promise.all(
+    msg.content
+      .split(" ")
+      .filter((e) => e.startsWith("http://") || e.startsWith("https://"))
+      .map(isRickRoll)
+  ).then((e) => e.includes(true));
+
+  if (rickRoll) {
     msg.delete();
     msg.channel.sendMessage("I protected you from a rick roll");
     return;
