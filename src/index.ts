@@ -31,11 +31,8 @@ for (const [name, m] of Object.entries(memes)) {
 }
 
 async function redirectUrl(url: string) {
-  const res = await axios.get(url, {
-    maxRedirects: 0,
-    validateStatus: (s) => s === 302,
-  });
-  return res.headers.location;
+  const res = await axios.get(url);
+  return res.request.res.responseUrl;
 }
 
 const RICKROLL_IDS = ["dQw4w9WgXcQ", "oHg5SJYRHA0"];
