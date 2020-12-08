@@ -41,8 +41,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var child_process_1 = require("child_process");
 var fs_1 = require("fs");
-var memes_json_1 = __importDefault(require("./memes.json"));
-var memes = memes_json_1.default;
+var tmp_json_1 = __importDefault(require("./tmp.json"));
+var memes = tmp_json_1.default;
 function exec(cmd) {
     return new Promise(function (resolve, reject) {
         child_process_1.exec(cmd, function (error, stdout, stderr) {
@@ -67,9 +67,12 @@ function getFfmpeg(input, name, meme) {
         parts.push("-to " + meme.to);
     }
     var cut = parts.join(" ");
+    var earrape = "-af acrusher=.1:1:64:0:log";
     // cut has to be at the outputs NOT the input. This is a bug (https://trac.ffmpeg.org/ticket/8189)
-    return ("ffmpeg -y -i " + input + " " + cut + " \"memes/" + name + ".mp3\"" +
-        (meme.audioOnly ? "" : " " + cut + " \"memes/" + name + ".mp4\""));
+    return ("ffmpeg -y -i " + input + " " + cut + " \"memes/" + name + ".mp3\" " + cut + " " + earrape + " \"memes/" + name + "_earrape.mp3\"" +
+        (meme.audioOnly
+            ? ""
+            : " " + cut + " \"memes/" + name + ".mp4\" " + cut + " " + earrape + " \"memes/" + name + "_earrape.mp4\""));
 }
 function downloadVideo(name, meme) {
     return __awaiter(this, void 0, void 0, function () {
