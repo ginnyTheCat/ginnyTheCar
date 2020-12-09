@@ -2,7 +2,7 @@ import { exec as execCallback } from "child_process";
 import { unlink } from "fs";
 
 import { Meme, Memes } from "./memes";
-import _memes from "./tmp.json";
+import _memes from "./memes.json";
 const memes: Memes = <Memes>_memes;
 
 function exec(cmd: string) {

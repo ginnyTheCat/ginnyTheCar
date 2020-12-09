@@ -37,7 +37,7 @@
         "to": 303,
         "tags": ["cool", "nicht", "kiffen"]
     },
-    "dafür-stehe-ich-mit-meinem-namen": {
+    "dafuer-stehe-ich-mit-meinem-namen": {
         "url": "https://www.youtube.com/watch?v=54p7BdE6hys",
         "from": 22.6,
         "to": 25,
@@ -54,6 +54,15 @@
         "from": 13,
         "to": 16.4,
         "tags": ["frag", "nicht", "saft", "einfach", "orangensaft", "money", "boy"]
+    },
+    "gleich-eins-aufs-maul": {
+        "url": "https://www.youtube.com/watch?v=ZJWo9IkQGo4",
+        "to": 1.8,
+        "tags": ["gleich", "aufs", "maul", "tv", "total"]
+    },
+    "hey-rezo-du-alter-zerstoerer": {
+        "url": "https://www.youtube.com/watch?v=y9gZkSuPSQE",
+        "tags": ["rezo", "alter", "zerstörer", "philip", "amthor"]
     },
     "homo-shit": {
         "url": "https://www.youtube.com/watch?v=WQ9dZZOdWjQ",
@@ -84,7 +93,7 @@
         "tags": ["oof", "roblox", "death"],
         "audioOnly": true
     },
-    "scheiß-ösiland": {
+    "scheiss-oesiland": {
         "url": "https://www.youtube.com/watch?v=sFoeIRVwP6A",
         "from": 13,
         "to": 15.5,

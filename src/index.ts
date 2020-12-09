@@ -5,6 +5,7 @@ import axios from "axios";
 
 import { Memes } from "./memes";
 import _memes from "./memes.json";
+import { FileType } from "@leluxnet/xbot/dist/message";
 const memes: Memes = <Memes>_memes;
 
 const PREFIX = ":";
@@ -103,7 +104,9 @@ async function onMessage(msg: Message) {
 
   if (rickRoll) {
     msg.delete();
-    msg.channel.sendMessage("I protected you from a rick roll");
+    msg.channel.sendText(
+      `I protected you from \`${msg.author.name}\`'s rick roll`
+    );
     return;
   }
 
@@ -122,18 +125,18 @@ async function onMessage(msg: Message) {
 
   switch (cmd) {
     case "emojify":
-      msg.channel.sendMessage(args.map(toEmoji).join(" "));
+      msg.channel.sendText(args.map(toEmoji).join(" "));
       break;
     case "random-emojis": {
       if (args.length !== 1) return;
       const amount = parseInt(args[0]);
       if (isNaN(amount)) return;
 
-      msg.channel.sendMessage(randomEmojis(amount));
+      msg.channel.sendText(randomEmojis(amount));
       break;
     }
     case "question": {
-      const m = await msg.channel.sendMessage(args.join(" "));
+      const m = await msg.channel.sendText(args.join(" "));
 
       m.react("👍");
       m.react("👎");
@@ -159,7 +162,7 @@ async function onMessage(msg: Message) {
 
       const text = args.slice(0, args.length - emojis.length).join(" ");
 
-      const m = await msg.channel.sendMessage(text);
+      const m = await msg.channel.sendText(text);
       emojis.reverse().forEach((e) => m.react(e));
 
       break;
@@ -170,9 +173,9 @@ async function onMessage(msg: Message) {
       const vFile = `./memes/${name}.mp4`;
 
       if (existsSync(vFile)) {
-        msg.channel._internal.send("", { files: [vFile] });
+        msg.channel.sendFile(vFile, name, FileType.VIDEO);
       } else {
-        msg.channel._internal.send("", { files: [`./memes/${name}.mp3`] });
+        msg.channel.sendFile(`./memes/${name}.mp3`, name, FileType.AUDIO);
       }
       break;
     }
@@ -184,12 +187,12 @@ async function onMessage(msg: Message) {
       if (msg.platform instanceof Discord) {
         const voice = msg._internal.member.voice.channel;
         if (voice === undefined) {
-          msg.channel.sendMessage("You are not in a voice channel");
+          msg.channel.sendText("You are not in a voice channel");
         } else {
           voice.join().then((conn: any) => conn.play(file)); // .on("finish", () => voice.leave()))
         }
       } else {
-        msg.channel.sendMessage("This command only works on Discord");
+        msg.channel.sendText("This command only works on Discord");
       }
       break;
     }

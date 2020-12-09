@@ -44,6 +44,7 @@ var fs_1 = require("fs");
 var node_emoji_1 = require("node-emoji");
 var axios_1 = __importDefault(require("axios"));
 var memes_json_1 = __importDefault(require("./memes.json"));
+var message_1 = require("@leluxnet/xbot/dist/message");
 var memes = memes_json_1.default;
 var PREFIX = ":";
 var DISCORD_TOKEN = process.env.DISCORD_TOKEN;
@@ -156,7 +157,7 @@ function onMessage(msg) {
                     rickRoll = _c.sent();
                     if (rickRoll) {
                         msg.delete();
-                        msg.channel.sendMessage("I protected you from a rick roll");
+                        msg.channel.sendText("I protected you from `" + msg.author.name + "`'s rick roll");
                         return [2 /*return*/];
                     }
                     rCmd = undefined;
@@ -181,7 +182,7 @@ function onMessage(msg) {
                     }
                     return [3 /*break*/, 10];
                 case 2:
-                    msg.channel.sendMessage(args.map(toEmoji).join(" "));
+                    msg.channel.sendText(args.map(toEmoji).join(" "));
                     return [3 /*break*/, 10];
                 case 3:
                     {
@@ -190,11 +191,11 @@ function onMessage(msg) {
                         amount = parseInt(args[0]);
                         if (isNaN(amount))
                             return [2 /*return*/];
-                        msg.channel.sendMessage(randomEmojis(amount));
+                        msg.channel.sendText(randomEmojis(amount));
                         return [3 /*break*/, 10];
                     }
                     _c.label = 4;
-                case 4: return [4 /*yield*/, msg.channel.sendMessage(args.join(" "))];
+                case 4: return [4 /*yield*/, msg.channel.sendText(args.join(" "))];
                 case 5:
                     m = _c.sent();
                     m.react("👍");
@@ -216,7 +217,7 @@ function onMessage(msg) {
                         return true;
                     });
                     text = args.slice(0, args.length - emojis_1.length).join(" ");
-                    return [4 /*yield*/, msg.channel.sendMessage(text)];
+                    return [4 /*yield*/, msg.channel.sendText(text)];
                 case 7:
                     m_1 = _c.sent();
                     emojis_1.reverse().forEach(function (e) { return m_1.react(e); });
@@ -228,10 +229,10 @@ function onMessage(msg) {
                             return [2 /*return*/];
                         vFile = "./memes/" + name + ".mp4";
                         if (fs_1.existsSync(vFile)) {
-                            msg.channel._internal.send("", { files: [vFile] });
+                            msg.channel.sendFile(vFile, name, message_1.FileType.VIDEO);
                         }
                         else {
-                            msg.channel._internal.send("", { files: ["./memes/" + name + ".mp3"] });
+                            msg.channel.sendFile("./memes/" + name + ".mp3", name, message_1.FileType.AUDIO);
                         }
                         return [3 /*break*/, 10];
                     }
@@ -245,14 +246,14 @@ function onMessage(msg) {
                         if (msg.platform instanceof xbot_1.Discord) {
                             voice = msg._internal.member.voice.channel;
                             if (voice === undefined) {
-                                msg.channel.sendMessage("You are not in a voice channel");
+                                msg.channel.sendText("You are not in a voice channel");
                             }
                             else {
                                 voice.join().then(function (conn) { return conn.play(file_1); }); // .on("finish", () => voice.leave()))
                             }
                         }
                         else {
-                            msg.channel.sendMessage("This command only works on Discord");
+                            msg.channel.sendText("This command only works on Discord");
                         }
                         return [3 /*break*/, 10];
                     }
