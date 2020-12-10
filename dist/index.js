@@ -47,14 +47,6 @@ var memes_json_1 = __importDefault(require("./memes.json"));
 var message_1 = require("@leluxnet/xbot/dist/message");
 var memes = memes_json_1.default;
 var PREFIX = ":";
-var DISCORD_TOKEN = process.env.DISCORD_TOKEN;
-var clients = [];
-var discord;
-if (DISCORD_TOKEN != undefined) {
-    discord = new xbot_1.Discord(DISCORD_TOKEN);
-    discord.start();
-    clients.push(discord);
-}
 var tagMap = {};
 var _loop_1 = function (name, m) {
     m.tags.forEach(function (t) {
@@ -76,7 +68,6 @@ function redirectUrl(url) {
                 case 0: return [4 /*yield*/, axios_1.default.get(url)];
                 case 1:
                     res = _a.sent();
-                    console.log(res.request.res.responseUrl);
                     return [2 /*return*/, res.request.res.responseUrl];
             }
         });
@@ -229,10 +220,10 @@ function onMessage(msg) {
                             return [2 /*return*/];
                         vFile = "./memes/" + name + ".mp4";
                         if (fs_1.existsSync(vFile)) {
-                            msg.channel.sendFile(vFile, name, message_1.FileType.VIDEO);
+                            msg.channel.sendFile(name, vFile, message_1.FileType.VIDEO);
                         }
                         else {
-                            msg.channel.sendFile("./memes/" + name + ".mp3", name, message_1.FileType.AUDIO);
+                            msg.channel.sendFile(name, "./memes/" + name + ".mp3", message_1.FileType.AUDIO);
                         }
                         return [3 /*break*/, 10];
                     }
@@ -263,17 +254,9 @@ function onMessage(msg) {
         });
     });
 }
+var clients = xbot_1.envPlatforms();
 clients.forEach(function (c) {
     c.on("message", onMessage);
+    c.start();
 });
-process.on("SIGINT", function () { return __awaiter(void 0, void 0, void 0, function () {
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0: return [4 /*yield*/, Promise.all(clients.map(function (c) { return c.stop(); }))];
-            case 1:
-                _a.sent();
-                process.exit();
-                return [2 /*return*/];
-        }
-    });
-}); });
+xbot_1.stopOnSignal(clients);

@@ -1,4 +1,4 @@
-import { Discord, Message, Platform } from "@leluxnet/xbot";
+import { Discord, envPlatforms, Message, stopOnSignal } from "@leluxnet/xbot";
 import { existsSync } from "fs";
 import { find as findEmoji, hasEmoji, random as randomEmoji } from "node-emoji";
 import axios from "axios";
@@ -9,17 +9,6 @@ import { FileType } from "@leluxnet/xbot/dist/message";
 const memes: Memes = <Memes>_memes;
 
 const PREFIX = ":";
-
-const { DISCORD_TOKEN } = process.env;
-const clients: Platform[] = [];
-
-var discord: Discord;
-if (DISCORD_TOKEN != undefined) {
-  discord = new Discord(DISCORD_TOKEN);
-  discord.start();
-
-  clients.push(discord);
-}
 
 const tagMap: { [tag: string]: string[] } = {};
 for (const [name, m] of Object.entries(memes)) {
@@ -33,7 +22,6 @@ for (const [name, m] of Object.entries(memes)) {
 
 async function redirectUrl(url: string) {
   const res = await axios.get(url);
-  console.log(res.request.res.responseUrl);
   return res.request.res.responseUrl;
 }
 
@@ -173,9 +161,9 @@ async function onMessage(msg: Message) {
       const vFile = `./memes/${name}.mp4`;
 
       if (existsSync(vFile)) {
-        msg.channel.sendFile(vFile, name, FileType.VIDEO);
+        msg.channel.sendFile(name, vFile, FileType.VIDEO);
       } else {
-        msg.channel.sendFile(`./memes/${name}.mp3`, name, FileType.AUDIO);
+        msg.channel.sendFile(name, `./memes/${name}.mp3`, FileType.AUDIO);
       }
       break;
     }
@@ -199,11 +187,11 @@ async function onMessage(msg: Message) {
   }
 }
 
+const clients = envPlatforms();
+
 clients.forEach((c) => {
   c.on("message", onMessage);
+  c.start();
 });
 
-process.on("SIGINT", async () => {
-  await Promise.all(clients.map((c) => c.stop()));
-  process.exit();
-});
+stopOnSignal(clients);

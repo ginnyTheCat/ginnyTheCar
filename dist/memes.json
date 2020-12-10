@@ -64,6 +64,11 @@
         "url": "https://www.youtube.com/watch?v=y9gZkSuPSQE",
         "tags": ["rezo", "alter", "zerstörer", "philip", "amthor"]
     },
+    "hey-vsauce-michael-here": {
+        "url": "https://www.youtube.com/watch?v=oBBvUHubaYU",
+        "to": 2.1,
+        "tags": ["hey", "vsauce", "michael", "here"]
+    },
     "homo-shit": {
         "url": "https://www.youtube.com/watch?v=WQ9dZZOdWjQ",
         "from": 26.3,
@@ -73,6 +78,12 @@
         "url": "https://www.youtube.com/watch?v=nrzpRozQnM4",
         "to": 6.55,
         "tags": ["lehrer", "schmidt", "intro"]
+    },
+    "nani": {
+        "url": "https://www.youtube.com/watch?v=vxKBHX9Datw",
+        "from": 6,
+        "to": 7,
+        "tags": ["nani"]
     },
     "nice": {
         "url": "https://www.youtube.com/watch?v=Akwm2UZJ34o",
@@ -103,7 +114,13 @@
         "url": "https://www.youtube.com/watch?v=SSroMx0Wh4E",
         "from": 365.9,
         "to": 370.4,
-        "tags": ["so", "geiles", "produkt", "inscope", "inscop21"]
+        "tags": ["so", "geiles", "produkt", "inscope", "inscope21"]
+    },
+    "stop-it-get-some-help": {
+        "url": "https://www.youtube.com/watch?v=rb8z2BMrd60",
+        "from": 48.2,
+        "to": 50.9,
+        "tags": ["stop", "it", "get", "some", "help", "michael", "jordan"]
     },
     "sweet-home-alabama": {
         "url": "https://www.youtube.com/watch?v=ye5BuYf8q4o",
@@ -140,6 +157,12 @@
         "url": "https://www.youtube.com/watch?v=OleLlIpymtU",
         "tags": ["wasted", "death", "gta"],
         "audioOnly": true
+    },
+    "why-are-you-running": {
+        "url": "https://www.youtube.com/watch?v=6B7ToJoqGpg",
+        "from": 55,
+        "to": 58,
+        "tags": ["why", "you", "running"]
     },
     "wilhelm-scream": {
         "url": "https://www.youtube.com/watch?v=q3-Y8eTaMZc",
