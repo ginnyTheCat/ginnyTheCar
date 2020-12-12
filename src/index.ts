@@ -1,14 +1,29 @@
-import { Discord, envPlatforms, Message, stopOnSignal } from "@leluxnet/xbot";
-import { existsSync } from "fs";
+import {
+  Discord,
+  envPlatforms,
+  Message,
+  stopOnSignal,
+  youtube,
+  twitch,
+} from "@leluxnet/xbot";
+import { FileType } from "@leluxnet/xbot/dist/message"; // tmp
+
+import { createReadStream, existsSync, unlink } from "fs";
 import { find as findEmoji, hasEmoji, random as randomEmoji } from "node-emoji";
 import axios from "axios";
+import { PassThrough, Readable } from "stream";
 
 import { Memes } from "./memes";
 import _memes from "./memes.json";
-import { FileType } from "@leluxnet/xbot/dist/message";
 const memes: Memes = <Memes>_memes;
 
 const PREFIX = ":";
+
+const youtubeApiKey = process.env.YOUTUBE_API_KEY;
+if (youtubeApiKey === undefined) {
+  console.error(`"YOUTUBE_API_KEY" env variable not set`);
+  process.exit(1);
+}
 
 const tagMap: { [tag: string]: string[] } = {};
 for (const [name, m] of Object.entries(memes)) {
@@ -20,7 +35,7 @@ for (const [name, m] of Object.entries(memes)) {
   });
 }
 
-async function redirectUrl(url: string) {
+async function redirectUrl(url: string): Promise<string> {
   const res = await axios.get(url);
   return res.request.res.responseUrl;
 }
@@ -29,13 +44,9 @@ const RICKROLL_IDS = ["dQw4w9WgXcQ", "oHg5SJYRHA0"];
 
 async function isRickRoll(url: string) {
   const resUrl = await redirectUrl(url);
-  return !!RICKROLL_IDS.find(
-    (e) =>
-      (resUrl.startsWith("https://www.youtube.com/watch") &&
-        resUrl.includes(`v=${e}`)) ||
-      resUrl.startsWith(`https://www.youtube.com/embed/${e}`) ||
-      resUrl.startsWith(`https://www.youtube-nocookie.com/embed/${e}`)
-  );
+
+  const id = youtube.getVideoId(resUrl);
+  return id !== null && RICKROLL_IDS.includes(id);
 }
 
 function toEmoji(name: string) {
@@ -112,6 +123,17 @@ async function onMessage(msg: Message) {
   const [cmd, ...args] = rCmd.split(" ");
 
   switch (cmd) {
+    case "help": {
+      msg.channel.sendText(
+        "`emojify <text>`: Replaces words from the text with emojis\n" +
+          "`random-emojis <number>`: Sends x random emojis\n" +
+          "`question <text>`: Sends the question and reactions to answer it\n" +
+          "`poll <text> <emojis>`: Sends the text and reacts with the emojis\n" +
+          "`post <tags>`: Posts the meme found by the tags\n" +
+          "`play <tags>`: Plays the meme found by the tags"
+      );
+      break;
+    }
     case "emojify":
       msg.channel.sendText(args.map(toEmoji).join(" "));
       break;
@@ -161,27 +183,67 @@ async function onMessage(msg: Message) {
       const vFile = `./memes/${name}.mp4`;
 
       if (existsSync(vFile)) {
-        msg.channel.sendFile(name, vFile, FileType.VIDEO);
+        msg.channel.sendFile(name, createReadStream(vFile), FileType.VIDEO);
       } else {
-        msg.channel.sendFile(name, `./memes/${name}.mp3`, FileType.AUDIO);
+        msg.channel.sendFile(
+          name,
+          createReadStream(`./memes/${name}.mp3`),
+          FileType.AUDIO
+        );
       }
       break;
     }
     case "play": {
-      const name = findMeme(args);
-      if (name === undefined) return;
-      const file = `./memes/${name}.mp3`;
-
-      if (msg.platform instanceof Discord) {
-        const voice = msg._internal.member.voice.channel;
-        if (voice === undefined) {
-          msg.channel.sendText("You are not in a voice channel");
-        } else {
-          voice.join().then((conn: any) => conn.play(file)); // .on("finish", () => voice.leave()))
-        }
-      } else {
+      if (!(msg.platform instanceof Discord)) {
         msg.channel.sendText("This command only works on Discord");
+        return;
       }
+
+      const voice = msg._internal.member.voice.channel;
+      if (voice === undefined) {
+        msg.channel.sendText("You are not in a voice channel");
+        return;
+      }
+
+      if (args.length < 2) return;
+
+      var stream;
+
+      switch (args[0]) {
+        case "m": {
+          const name = findMeme(args.splice(1));
+          if (name === undefined) return;
+
+          stream = createReadStream(`./memes/${name}.mp3`);
+          break;
+        }
+        case "yt": {
+          var id = youtube.getVideoId(args[0]);
+          if (id === null) {
+            const info = await youtube.search(
+              args.splice(1).join(" "),
+              youtubeApiKey!
+            );
+
+            if (info === undefined) return;
+            id = info.id;
+          }
+
+          const data = await youtube.audioStream(id, {});
+          stream = data.stream;
+          break;
+        }
+        case "tw": {
+          stream = await twitch.audioStream(args[1]);
+          break;
+        }
+      }
+
+      if (stream === undefined) return;
+
+      const conn = await voice.join();
+      conn.play(stream); // .on("finish", () => voice.leave()))
+
       break;
     }
   }

@@ -2,7 +2,7 @@
   "name": "ginnythecar",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "start": "nodejs dist/index.js",
     "build": "tsc",
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@discordjs/opus": "^0.3.3",
-    "@leluxnet/xbot": "^0.3.5",
+    "@leluxnet/xbot": "^0.5.1",
     "axios": "^0.21.0",
     "node-emoji": "^1.10.0"
   },
