@@ -44,9 +44,13 @@ var fs_1 = require("fs");
 var node_emoji_1 = require("node-emoji");
 var axios_1 = __importDefault(require("axios"));
 var memes_json_1 = __importDefault(require("./memes.json"));
-var message_1 = require("@leluxnet/xbot/dist/message");
 var memes = memes_json_1.default;
 var PREFIX = ":";
+var youtubeApiKey = process.env.YOUTUBE_API_KEY;
+if (youtubeApiKey === undefined) {
+    console.error("\"YOUTUBE_API_KEY\" env variable not set");
+    process.exit(1);
+}
 var tagMap = {};
 var _loop_1 = function (name, m) {
     m.tags.forEach(function (t) {
@@ -76,18 +80,14 @@ function redirectUrl(url) {
 var RICKROLL_IDS = ["dQw4w9WgXcQ", "oHg5SJYRHA0"];
 function isRickRoll(url) {
     return __awaiter(this, void 0, void 0, function () {
-        var resUrl;
+        var resUrl, id;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, redirectUrl(url)];
                 case 1:
                     resUrl = _a.sent();
-                    return [2 /*return*/, !!RICKROLL_IDS.find(function (e) {
-                            return (resUrl.startsWith("https://www.youtube.com/watch") &&
-                                resUrl.includes("v=" + e)) ||
-                                resUrl.startsWith("https://www.youtube.com/embed/" + e) ||
-                                resUrl.startsWith("https://www.youtube-nocookie.com/embed/" + e);
-                        })];
+                    id = xbot_1.youtube.getVideoId(resUrl);
+                    return [2 /*return*/, id !== null && RICKROLL_IDS.includes(id)];
             }
         });
     });
@@ -135,15 +135,98 @@ function findMeme(input) {
     }
     return input.includes("earrape") ? maxKey + "_earrape" : maxKey;
 }
+function getStream(args, download, uploadLimit) {
+    return __awaiter(this, void 0, void 0, function () {
+        var _a, name, vName, id, info, data, fileName, stream;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    _a = args[0];
+                    switch (_a) {
+                        case "m": return [3 /*break*/, 1];
+                        case "yt": return [3 /*break*/, 2];
+                        case "tw": return [3 /*break*/, 6];
+                    }
+                    return [3 /*break*/, 8];
+                case 1:
+                    {
+                        name = findMeme(args);
+                        if (name === undefined)
+                            return [2 /*return*/];
+                        vName = "./memes/" + name + ".mp4";
+                        if (download && fs_1.existsSync(vName)) {
+                            return [2 /*return*/, {
+                                    fileName: name + ".mp4",
+                                    name: name,
+                                    stream: fs_1.createReadStream(vName),
+                                    type: xbot_1.FileType.VIDEO,
+                                }];
+                        }
+                        else {
+                            return [2 /*return*/, {
+                                    fileName: name + ".mp3",
+                                    name: name,
+                                    stream: fs_1.createReadStream("./memes/" + name + ".mp3"),
+                                    type: xbot_1.FileType.VIDEO,
+                                }];
+                        }
+                    }
+                    _b.label = 2;
+                case 2:
+                    id = xbot_1.youtube.getVideoId(args[0]);
+                    if (!(id === null)) return [3 /*break*/, 4];
+                    return [4 /*yield*/, xbot_1.youtube.search(args.join(" "), youtubeApiKey)];
+                case 3:
+                    info = _b.sent();
+                    if (info === undefined)
+                        return [2 /*return*/];
+                    id = info.id;
+                    _b.label = 4;
+                case 4: return [4 /*yield*/, xbot_1.youtube.stream(id, {
+                        video: download,
+                        sizeLimit: uploadLimit,
+                    })];
+                case 5:
+                    data = _b.sent();
+                    if (data === undefined)
+                        return [2 /*return*/];
+                    fileName = data.info.title.toLowerCase().replace(" ", "-");
+                    return [2 /*return*/, {
+                            fileName: download ? fileName + ".mp4" : fileName + ".mp3",
+                            name: data.info.title,
+                            stream: data.stream,
+                            type: download ? xbot_1.FileType.VIDEO : xbot_1.FileType.AUDIO,
+                        }];
+                case 6:
+                    if (download)
+                        return [2 /*return*/];
+                    return [4 /*yield*/, xbot_1.twitch.audioStream(args[0])];
+                case 7:
+                    stream = _b.sent();
+                    return [2 /*return*/, stream === undefined
+                            ? undefined
+                            : {
+                                fileName: "audio.mp3",
+                                name: "",
+                                stream: stream,
+                                type: xbot_1.FileType.AUDIO,
+                            }];
+                case 8: return [2 /*return*/];
+            }
+        });
+    });
+}
 function onMessage(msg) {
     return __awaiter(this, void 0, void 0, function () {
-        var rickRoll, rCmd, _a, cmd, args, _b, amount, m, emojis_1, text, m_1, name, vFile, name, file_1, voice;
+        var rickRoll, rCmd, _a, cmd, args, _b, amount, m, emojis_1, text, m_1, data, voice, data, conn, e_1;
         return __generator(this, function (_c) {
             switch (_c.label) {
-                case 0: return [4 /*yield*/, Promise.all(msg.content
-                        .split(" ")
-                        .filter(function (e) { return e.startsWith("http://") || e.startsWith("https://"); })
-                        .map(isRickRoll)).then(function (e) { return e.includes(true); })];
+                case 0:
+                    _c.trys.push([0, 15, , 16]);
+                    return [4 /*yield*/, Promise.all(msg.content
+                            .split(" ")
+                            .filter(function (e) { return e.startsWith("http://") || e.startsWith("https://"); })
+                            .map(isRickRoll)).then(function (e) { return e.includes(true); })];
                 case 1:
                     rickRoll = _c.sent();
                     if (rickRoll) {
@@ -164,18 +247,30 @@ function onMessage(msg) {
                     _a = rCmd.split(" "), cmd = _a[0], args = _a.slice(1);
                     _b = cmd;
                     switch (_b) {
-                        case "emojify": return [3 /*break*/, 2];
-                        case "random-emojis": return [3 /*break*/, 3];
-                        case "question": return [3 /*break*/, 4];
-                        case "poll": return [3 /*break*/, 6];
-                        case "post": return [3 /*break*/, 8];
-                        case "play": return [3 /*break*/, 9];
+                        case "help": return [3 /*break*/, 2];
+                        case "emojify": return [3 /*break*/, 3];
+                        case "random-emojis": return [3 /*break*/, 4];
+                        case "question": return [3 /*break*/, 5];
+                        case "poll": return [3 /*break*/, 7];
+                        case "post": return [3 /*break*/, 9];
+                        case "play": return [3 /*break*/, 11];
                     }
-                    return [3 /*break*/, 10];
+                    return [3 /*break*/, 14];
                 case 2:
-                    msg.channel.sendText(args.map(toEmoji).join(" "));
-                    return [3 /*break*/, 10];
+                    {
+                        msg.channel.sendText("`emojify <text>`: Replaces words from the text with emojis\n" +
+                            "`random-emojis <number>`: Sends x random emojis\n" +
+                            "`question <text>`: Sends the question and reactions to answer it\n" +
+                            "`poll <text> <emojis>`: Sends the text and reacts with the emojis\n" +
+                            "`post <tags>`: Posts the meme found by the tags\n" +
+                            "`play <tags>`: Plays the meme found by the tags");
+                        return [3 /*break*/, 14];
+                    }
+                    _c.label = 3;
                 case 3:
+                    msg.channel.sendText(args.map(toEmoji).join(" "));
+                    return [3 /*break*/, 14];
+                case 4:
                     {
                         if (args.length !== 1)
                             return [2 /*return*/];
@@ -183,17 +278,17 @@ function onMessage(msg) {
                         if (isNaN(amount))
                             return [2 /*return*/];
                         msg.channel.sendText(randomEmojis(amount));
-                        return [3 /*break*/, 10];
+                        return [3 /*break*/, 14];
                     }
-                    _c.label = 4;
-                case 4: return [4 /*yield*/, msg.channel.sendText(args.join(" "))];
-                case 5:
+                    _c.label = 5;
+                case 5: return [4 /*yield*/, msg.channel.sendText(args.join(" "))];
+                case 6:
                     m = _c.sent();
                     m.react("👍");
                     m.react("👎");
                     m.react("🤷");
-                    return [3 /*break*/, 10];
-                case 6:
+                    return [3 /*break*/, 14];
+                case 7:
                     console.log(args);
                     emojis_1 = [];
                     args
@@ -209,47 +304,46 @@ function onMessage(msg) {
                     });
                     text = args.slice(0, args.length - emojis_1.length).join(" ");
                     return [4 /*yield*/, msg.channel.sendText(text)];
-                case 7:
+                case 8:
                     m_1 = _c.sent();
                     emojis_1.reverse().forEach(function (e) { return m_1.react(e); });
-                    return [3 /*break*/, 10];
-                case 8:
-                    {
-                        name = findMeme(args);
-                        if (name === undefined)
-                            return [2 /*return*/];
-                        vFile = "./memes/" + name + ".mp4";
-                        if (fs_1.existsSync(vFile)) {
-                            msg.channel.sendFile(name, vFile, message_1.FileType.VIDEO);
-                        }
-                        else {
-                            msg.channel.sendFile(name, "./memes/" + name + ".mp3", message_1.FileType.AUDIO);
-                        }
-                        return [3 /*break*/, 10];
+                    return [3 /*break*/, 14];
+                case 9: return [4 /*yield*/, getStream(args, true, msg.platform.uploadLimit)];
+                case 10:
+                    data = _c.sent();
+                    if (data === undefined)
+                        return [2 /*return*/];
+                    msg.channel.sendFile(data.fileName, data.stream, data.type);
+                    return [3 /*break*/, 14];
+                case 11:
+                    if (!(msg.platform instanceof xbot_1.Discord)) {
+                        throw new xbot_1.MsgError("This command only works on Discord");
                     }
-                    _c.label = 9;
-                case 9:
-                    {
-                        name = findMeme(args);
-                        if (name === undefined)
-                            return [2 /*return*/];
-                        file_1 = "./memes/" + name + ".mp3";
-                        if (msg.platform instanceof xbot_1.Discord) {
-                            voice = msg._internal.member.voice.channel;
-                            if (voice === undefined) {
-                                msg.channel.sendText("You are not in a voice channel");
-                            }
-                            else {
-                                voice.join().then(function (conn) { return conn.play(file_1); }); // .on("finish", () => voice.leave()))
-                            }
-                        }
-                        else {
-                            msg.channel.sendText("This command only works on Discord");
-                        }
-                        return [3 /*break*/, 10];
+                    voice = msg._internal.member.voice.channel;
+                    if (voice === undefined) {
+                        throw new xbot_1.MsgError("You are not in a voice channel");
                     }
-                    _c.label = 10;
-                case 10: return [2 /*return*/];
+                    return [4 /*yield*/, getStream(args, false, undefined)];
+                case 12:
+                    data = _c.sent();
+                    if (data === undefined)
+                        return [2 /*return*/];
+                    return [4 /*yield*/, voice.join()];
+                case 13:
+                    conn = _c.sent();
+                    conn.play(data.stream); // .on("finish", () => voice.leave()))
+                    return [3 /*break*/, 14];
+                case 14: return [3 /*break*/, 16];
+                case 15:
+                    e_1 = _c.sent();
+                    if (e_1 instanceof xbot_1.MsgError) {
+                        msg.channel.sendText(e_1.msg);
+                    }
+                    else {
+                        throw e_1;
+                    }
+                    return [3 /*break*/, 16];
+                case 16: return [2 /*return*/];
             }
         });
     });
