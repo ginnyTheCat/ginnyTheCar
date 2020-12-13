@@ -137,17 +137,19 @@ function findMeme(input) {
 }
 function getStream(args, download, uploadLimit) {
     return __awaiter(this, void 0, void 0, function () {
-        var _a, name, vName, id, info, data, fileName, stream;
+        var type, _a, name, vName, id, info, data, fileName, stream, data, stream;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
-                    _a = args[0];
+                    type = args.shift();
+                    _a = type;
                     switch (_a) {
                         case "m": return [3 /*break*/, 1];
                         case "yt": return [3 /*break*/, 2];
                         case "tw": return [3 /*break*/, 6];
+                        case "sc": return [3 /*break*/, 8];
                     }
-                    return [3 /*break*/, 8];
+                    return [3 /*break*/, 10];
                 case 1:
                     {
                         name = findMeme(args);
@@ -211,14 +213,27 @@ function getStream(args, download, uploadLimit) {
                                 stream: stream,
                                 type: xbot_1.FileType.AUDIO,
                             }];
-                case 8: return [2 /*return*/];
+                case 8:
+                    data = xbot_1.soundcloud.getSongData(args[0]);
+                    if (data === null)
+                        return [2 /*return*/];
+                    return [4 /*yield*/, xbot_1.soundcloud.stream(data)];
+                case 9:
+                    stream = _b.sent();
+                    return [2 /*return*/, {
+                            fileName: data.name + ".mp3",
+                            name: "",
+                            stream: stream,
+                            type: xbot_1.FileType.AUDIO,
+                        }];
+                case 10: return [2 /*return*/];
             }
         });
     });
 }
 function onMessage(msg) {
     return __awaiter(this, void 0, void 0, function () {
-        var rickRoll, rCmd, _a, cmd, args, _b, amount, m, emojis_1, text, m_1, data, voice, data, conn, e_1;
+        var rickRoll, rCmd, _a, cmd, args, _b, help, amount, m, emojis_1, text, m_1, data, voice, data, conn, e_1;
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
@@ -258,12 +273,16 @@ function onMessage(msg) {
                     return [3 /*break*/, 14];
                 case 2:
                     {
-                        msg.channel.sendText("`emojify <text>`: Replaces words from the text with emojis\n" +
+                        help = "`emojify <text>`: Replaces words from the text with emojis\n" +
                             "`random-emojis <number>`: Sends x random emojis\n" +
                             "`question <text>`: Sends the question and reactions to answer it\n" +
                             "`poll <text> <emojis>`: Sends the text and reacts with the emojis\n" +
-                            "`post <tags>`: Posts the meme found by the tags\n" +
-                            "`play <tags>`: Plays the meme found by the tags");
+                            "`post <m|yt|sc> <tags>`: Posts a meme, YouTube video or song from SoundCloud";
+                        if (msg.platform instanceof xbot_1.Discord) {
+                            help +=
+                                "\n`play <m|yt|tw|sc>`: Plays a meme, YouTube video, Twitch stream or song from SoundCloud in a voice channel";
+                        }
+                        msg.channel.sendText(help);
                         return [3 /*break*/, 14];
                     }
                     _c.label = 3;
@@ -320,7 +339,7 @@ function onMessage(msg) {
                         throw new xbot_1.MsgError("This command only works on Discord");
                     }
                     voice = msg._internal.member.voice.channel;
-                    if (voice === undefined) {
+                    if (voice === null) {
                         throw new xbot_1.MsgError("You are not in a voice channel");
                     }
                     return [4 /*yield*/, getStream(args, false, undefined)];

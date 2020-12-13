@@ -108,16 +108,25 @@ function downloadVideoBest(name, meme) {
     });
 }
 (function () { return __awaiter(void 0, void 0, void 0, function () {
-    var _loop_1, _i, _a, _b, name, m;
+    var _i, _a, _b, name, m;
     return __generator(this, function (_c) {
-        _loop_1 = function (name, m) {
-            console.log("Downloading " + name);
-            downloadVideoBest(name, m).then(function () { return console.log("Downloaded " + name); });
-        };
-        for (_i = 0, _a = Object.entries(memes); _i < _a.length; _i++) {
-            _b = _a[_i], name = _b[0], m = _b[1];
-            _loop_1(name, m);
+        switch (_c.label) {
+            case 0:
+                _i = 0, _a = Object.entries(memes);
+                _c.label = 1;
+            case 1:
+                if (!(_i < _a.length)) return [3 /*break*/, 4];
+                _b = _a[_i], name = _b[0], m = _b[1];
+                console.log("Downloading " + name);
+                return [4 /*yield*/, downloadVideoBest(name, m)];
+            case 2:
+                _c.sent();
+                console.log("Downloaded " + name);
+                _c.label = 3;
+            case 3:
+                _i++;
+                return [3 /*break*/, 1];
+            case 4: return [2 /*return*/];
         }
-        return [2 /*return*/];
     });
 }); })();

@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@discordjs/opus": "^0.3.3",
-    "@leluxnet/xbot": "^0.6.2",
+    "@leluxnet/xbot": "^0.6.6",
     "axios": "^0.21.0",
     "node-emoji": "^1.10.0"
   },

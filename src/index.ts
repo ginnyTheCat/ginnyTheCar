@@ -7,6 +7,7 @@ import {
   youtube,
   twitch,
   MsgError,
+  soundcloud,
 } from "@leluxnet/xbot";
 
 import { createReadStream, existsSync } from "fs";
@@ -106,7 +107,8 @@ async function getStream(
   download: boolean,
   uploadLimit?: number
 ): Promise<StreamData | undefined> {
-  switch (args[0]) {
+  const type = args.shift();
+  switch (type) {
     case "m": {
       const name = findMeme(args);
       if (name === undefined) return;
@@ -164,6 +166,18 @@ async function getStream(
             type: FileType.AUDIO,
           };
     }
+    case "sc": {
+      const data = soundcloud.getSongData(args[0]);
+      if (data === null) return;
+
+      const stream = await soundcloud.stream(data);
+      return {
+        fileName: `${data.name}.mp3`,
+        name: "",
+        stream,
+        type: FileType.AUDIO,
+      };
+    }
   }
 }
 
@@ -199,14 +213,19 @@ async function onMessage(msg: Message) {
 
     switch (cmd) {
       case "help": {
-        msg.channel.sendText(
+        var help =
           "`emojify <text>`: Replaces words from the text with emojis\n" +
-            "`random-emojis <number>`: Sends x random emojis\n" +
-            "`question <text>`: Sends the question and reactions to answer it\n" +
-            "`poll <text> <emojis>`: Sends the text and reacts with the emojis\n" +
-            "`post <tags>`: Posts the meme found by the tags\n" +
-            "`play <tags>`: Plays the meme found by the tags"
-        );
+          "`random-emojis <number>`: Sends x random emojis\n" +
+          "`question <text>`: Sends the question and reactions to answer it\n" +
+          "`poll <text> <emojis>`: Sends the text and reacts with the emojis\n" +
+          "`post <m|yt|sc> <tags>`: Posts a meme, YouTube video or song from SoundCloud";
+
+        if (msg.platform instanceof Discord) {
+          help +=
+            "\n`play <m|yt|tw|sc>`: Plays a meme, YouTube video, Twitch stream or song from SoundCloud in a voice channel";
+        }
+
+        msg.channel.sendText(help);
         break;
       }
       case "emojify":
@@ -265,7 +284,7 @@ async function onMessage(msg: Message) {
         }
 
         const voice = msg._internal.member.voice.channel;
-        if (voice === undefined) {
+        if (voice === null) {
           throw new MsgError("You are not in a voice channel");
         }
 

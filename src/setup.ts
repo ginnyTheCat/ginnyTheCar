@@ -62,6 +62,7 @@ async function downloadVideoBest(name: string, meme: Meme) {
 (async () => {
   for (const [name, m] of Object.entries(memes)) {
     console.log(`Downloading ${name}`);
-    downloadVideoBest(name, m).then(() => console.log(`Downloaded ${name}`));
+    await downloadVideoBest(name, m);
+    console.log(`Downloaded ${name}`);
   }
 })();
