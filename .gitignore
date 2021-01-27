@@ -1,6 +1,5 @@
 node_modules
+dist
 
 memes/**
 !memes/.gitkeep
-
-src/tmp.json

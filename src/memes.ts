@@ -3,7 +3,7 @@ export interface Memes {
 }
 
 export interface Meme {
-  url: string;
+  id: string;
   from?: number;
   to?: number;
   tags: string[];

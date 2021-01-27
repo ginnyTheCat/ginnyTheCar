@@ -1,5 +1,6 @@
 import { exec as execCallback } from "child_process";
-import { unlink } from "fs";
+import ytdl from "ytdl-core";
+import ffmpeg from "fluent-ffmpeg";
 
 import { Meme, Memes } from "./memes";
 import _memes from "./memes.json";
@@ -17,52 +18,66 @@ function exec(cmd: string) {
   });
 }
 
-function deleteFile(name: string) {
-  return new Promise((resolve, _) => unlink(name, resolve));
-}
-
-function getFfmpeg(input: string, name: string, meme: Meme) {
-  const parts = [];
-  if (meme.from !== undefined) {
-    parts.push(`-ss ${meme.from}`);
-  }
-  if (meme.to !== undefined) {
-    parts.push(`-to ${meme.to}`);
-  }
-  const cut = parts.join(" ");
-
-  const earrape = "-af acrusher=.1:1:64:0:log";
-
-  // cut has to be at the outputs NOT the input. This is a bug (https://trac.ffmpeg.org/ticket/8189)
-  return (
-    `ffmpeg -y -i ${input} ${cut} "memes/${name}.mp3" ${cut} ${earrape} "memes/${name}_earrape.mp3"` +
-    (meme.audioOnly
-      ? ""
-      : ` ${cut} "memes/${name}.mp4" ${cut} ${earrape} "memes/${name}_earrape.mp4"`)
-  );
-}
-
 async function downloadVideo(name: string, meme: Meme) {
-  await exec(
-    `youtube-dl -o - "${meme.url}" | ` + getFfmpeg("pipe:0", name, meme)
+  const info = await ytdl.getInfo(meme.id);
+
+  const audio = ytdl.filterFormats(info.formats, "audioonly")[0].url;
+  const video = ytdl.filterFormats(info.formats, "videoonly")[0].url;
+
+  const file = `memes/${name}.mp`;
+  const fileE = `memes/${name}_earrape.mp`;
+
+  const earrape = [{ filter: "acrusher", options: [0.1, 1, 64, 0, "log"] }];
+
+  const duration =
+    meme.to === undefined ? undefined : meme.to - (meme.from || 0);
+
+  const cmd = ffmpeg().input(audio);
+
+  if (!meme.audioOnly) {
+    cmd.input(video);
+  }
+
+  const addOutput = (path: string) => {
+    cmd.output(path);
+
+    if (meme.from !== undefined) {
+      cmd.seekOutput(meme.from);
+    }
+    if (duration !== undefined) {
+      cmd.duration(duration);
+    }
+
+    return cmd;
+  };
+
+  addOutput(`${file}3`);
+  addOutput(`${fileE}3`).audioFilter(earrape);
+
+  if (!meme.audioOnly) {
+    addOutput(`${file}4`);
+    addOutput(`${fileE}4`).audioFilter(earrape);
+  }
+
+  return new Promise<void>((resolve, reject) =>
+    cmd
+      .on("error", (err) => reject(err))
+      .on("end", () => resolve())
+      .run()
   );
-}
-
-async function downloadVideoBest(name: string, meme: Meme) {
-  const tmpFile = `memes/${name}.tmp.mkv`;
-  await exec(
-    `youtube-dl --merge-output-format mkv -o "${tmpFile}" ${meme.url}`
-  );
-
-  await exec(getFfmpeg(tmpFile, name, meme));
-
-  await deleteFile(tmpFile);
 }
 
 (async () => {
-  for (const [name, m] of Object.entries(memes)) {
-    console.log(`Downloading ${name}`);
-    await downloadVideoBest(name, m);
-    console.log(`Downloaded ${name}`);
+  var entries = Object.entries(memes);
+
+  const args = process.argv.slice(2);
+  if (args.length > 0) {
+    entries = entries.filter(([name]) => args.includes(name));
+  }
+
+  var i = 0;
+  for (const [name, m] of entries) {
+    console.log(`[${++i}/${entries.length}] ${name}`);
+    await downloadVideo(name, m);
   }
 })();
