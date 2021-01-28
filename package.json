@@ -14,13 +14,11 @@
     "@discordjs/opus": "^0.3.3",
     "@leluxnet/xbot": "^0.6.6",
     "axios": "^0.21.1",
-    "ffmpeg-static": "^4.2.7",
     "fluent-ffmpeg": "^2.1.2",
     "node-emoji": "^1.10.0",
     "ytdl-core": "^4.4.5"
   },
   "devDependencies": {
-    "@types/ffmpeg-static": "^3.0.0",
     "@types/fluent-ffmpeg": "^2.1.16",
     "@types/node": "^14.14.10",
     "@types/node-emoji": "^1.8.1",

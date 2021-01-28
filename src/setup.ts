@@ -1,7 +1,6 @@
 import { exec as execCallback } from "child_process";
 import ytdl from "ytdl-core";
 import ffmpeg from "fluent-ffmpeg";
-import ffmpegPath from "ffmpeg-static";
 
 import { Meme, Memes } from "./memes";
 import _memes from "./memes.json";
@@ -33,7 +32,7 @@ async function downloadVideo(name: string, meme: Meme) {
   const duration =
     meme.to === undefined ? undefined : meme.to - (meme.from || 0);
 
-  const cmd = ffmpeg().setFfmpegPath(ffmpegPath).input(audio);
+  const cmd = ffmpeg().input(audio);
 
   if (!meme.audioOnly) {
     cmd.input(video);
